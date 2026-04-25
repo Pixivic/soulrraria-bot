@@ -200,6 +200,28 @@ client.once(Events.ClientReady, () => {
 // ================= INTERACTIONS =================
 client.on(Events.InteractionCreate, async interaction => {
 
+  // ================= RESTRICTIONS =================
+
+// ONLY allow this specific thread
+const ALLOWED_THREAD_ID = "1497465419588436059";
+
+// block everything outside the thread
+if (interaction.channelId !== ALLOWED_THREAD_ID) {
+  return interaction.reply({
+    content: "❌ Use this only in the Search thread.",
+    ephemeral: true
+  });
+}
+
+// allow ONLY /search command
+if (interaction.isChatInputCommand()) {
+  if (interaction.commandName !== "search") {
+    return interaction.reply({
+      content: "❌ Only /search is allowed here.",
+      ephemeral: true
+    });
+  }
+}
   // ================= SLASH COMMANDS =================
   if (interaction.isChatInputCommand()) {
 
