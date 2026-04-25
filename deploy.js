@@ -1,5 +1,3 @@
-require('dotenv').config();
-
 const { REST, Routes, SlashCommandBuilder } = require('discord.js');
 
 // ✅ USE ENV TOKEN (Railway safe)
