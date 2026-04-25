@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 // === START OF FILE ===
 const {
   Client,
@@ -181,13 +183,13 @@ Demon Eye = C6H8O6 Battery`
 
 // ================= HELPERS =================
 function parseList(str) {
-  return str.split("\n").slice(1);
+  return str.split("\n").slice(1).filter(Boolean);
 }
 
 function createEmbed(title, items, page, total) {
   return new EmbedBuilder()
-    .setTitle(title)
-    .setDescription(items.join("\n"))
+    .setTitle(`📂 ${title}`)
+    .setDescription(items.join("\n") || "No data.")
     .setFooter({ text: `Page ${page + 1} / ${total}` })
     .setColor(0x00ff99);
 }
@@ -200,8 +202,10 @@ client.once(Events.ClientReady, () => {
 // ================= INTERACTIONS =================
 client.on(Events.InteractionCreate, async interaction => {
 
+  // ================= SLASH COMMANDS =================
   if (interaction.isChatInputCommand()) {
 
+    // ===== MENU =====
     if (interaction.commandName === "menu") {
 
       const menu = new StringSelectMenuBuilder()
@@ -217,42 +221,57 @@ client.on(Events.InteractionCreate, async interaction => {
       const row = new ActionRowBuilder().addComponents(menu);
 
       await interaction.reply({
-        content: "**Soulrraria – Rename List**",
+        content: "**🌿 Soulrraria – Rename List**\nChoose a category:",
         components: [row]
       });
     }
 
+    // ===== SEARCH =====
     if (interaction.commandName === "search") {
+      try {
+        await interaction.deferReply(); // prevents timeout
 
-      const query = interaction.options.getString("item").toLowerCase();
+        const query = interaction.options.getString("query")?.toLowerCase();
 
-      let results = [];
+        if (!query) {
+          return interaction.editReply("❌ Please enter a search term.");
+        }
 
-      for (const category in lists) {
-        const items = parseList(lists[category]);
+        let results = [];
 
-        const matches = items.filter(i =>
-          i.toLowerCase().includes(query)
-        );
+        for (const category in lists) {
+          const items = parseList(lists[category]);
 
-        matches.forEach(m => {
-          results.push(`**[${category.toUpperCase()}]** ${m}`);
-        });
+          const matches = items.filter(i =>
+            i.toLowerCase().includes(query)
+          );
+
+          matches.forEach(m => {
+            results.push(`**[${category.toUpperCase()}]** ${m}`);
+          });
+        }
+
+        if (results.length === 0) {
+          return interaction.editReply(`❌ No results for "${query}"`);
+        }
+
+        const embed = new EmbedBuilder()
+          .setTitle(`🔍 Results for "${query}"`)
+          .setDescription(results.slice(0, 40).join("\n"))
+          .setColor(0x00ffcc);
+
+        await interaction.editReply({ embeds: [embed] });
+
+      } catch (err) {
+        console.error(err);
+        if (!interaction.replied) {
+          await interaction.reply("❌ Error occurred.");
+        }
       }
-
-      if (results.length === 0) {
-        return interaction.reply(`❌ No results for "${query}"`);
-      }
-
-      const embed = new EmbedBuilder()
-        .setTitle(`🔍 Results for "${query}"`)
-        .setDescription(results.slice(0, 40).join("\n"))
-        .setColor(0x00ffcc);
-
-      await interaction.reply({ embeds: [embed] });
     }
   }
 
+  // ================= DROPDOWN =================
   if (interaction.isStringSelectMenu()) {
 
     const selected = interaction.values[0];
@@ -260,14 +279,12 @@ client.on(Events.InteractionCreate, async interaction => {
 
     let page = 0;
     const perPage = 10;
-    const totalPages = Math.ceil(items.length / perPage);
+    const totalPages = Math.max(1, Math.ceil(items.length / perPage));
 
     const getPage = () => {
       const start = page * perPage;
       return items.slice(start, start + perPage);
     };
-
-    const embed = createEmbed(selected.toUpperCase(), getPage(), page, totalPages);
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId("prev").setLabel("⬅️").setStyle(ButtonStyle.Primary),
@@ -275,7 +292,7 @@ client.on(Events.InteractionCreate, async interaction => {
     );
 
     await interaction.reply({
-      embeds: [embed],
+      embeds: [createEmbed(selected.toUpperCase(), getPage(), page, totalPages)],
       components: [row],
       ephemeral: true
     });
@@ -285,6 +302,10 @@ client.on(Events.InteractionCreate, async interaction => {
     const collector = msg.createMessageComponentCollector({ time: 60000 });
 
     collector.on("collect", async i => {
+
+      if (i.user.id !== interaction.user.id) {
+        return i.reply({ content: "❌ Not your menu.", ephemeral: true });
+      }
 
       if (i.customId === "next") page = (page + 1) % totalPages;
       if (i.customId === "prev") page = (page - 1 + totalPages) % totalPages;
@@ -297,4 +318,5 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 client.login(TOKEN);
+
 // === END OF FILE ===
