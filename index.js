@@ -1,5 +1,3 @@
-require('dotenv').config();
-
 // === START OF FILE ===
 const {
   Client,
