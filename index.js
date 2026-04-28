@@ -137,6 +137,14 @@ Hive Wall = Ruins Wall
 Ash Block = Swamp Soil Block
 Chippy's Couch = DIY Couch`,
 
+    npcs: `🚶‍♂️ NPCs
+Guide = Mentor
+Merchant = Trader
+Traveling Merchant  = Mail Guy
+Clothier  = Airbender
+Old Man  = Dark Airbender
+Mystic Slime = 2.0/Glitched Slime`,
+
   fishing: `🎣 Fishing
 Wood Fishing Pole = Handmade Rod
 Reinforced Fishing Pole = Average Rod
