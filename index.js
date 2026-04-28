@@ -208,15 +208,6 @@ client.once(Events.ClientReady, () => {
 // ================= INTERACTIONS =================
 client.on(Events.InteractionCreate, async interaction => {
 
-// allow ONLY /search command
-if (interaction.isChatInputCommand()) {
-  if (interaction.commandName !== "search") {
-    return interaction.reply({
-      content: "❌ Only /search is allowed here.",
-      ephemeral: true
-    });
-  }
-}
   // ================= SLASH COMMANDS =================
   if (interaction.isChatInputCommand()) {
 
